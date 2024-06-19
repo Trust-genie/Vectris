@@ -1,10 +1,5 @@
 package matrix_test
 
-import (
-	"testing"
-	m"vectris/matrix"
-)
-
 /*
 
 func TestEqual(t *testing.T) {
@@ -44,5 +39,60 @@ func BenchmarkEqual(b *testing.B) {
 
 	}
 
+}
+/*
+
+func TestAdd(t *testing.T) {
+	type args struct {
+		a *Matrix[N]
+		b *Matrix[N]
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Matrix[N]
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := matrix.Add(tt.args.a, tt.args.b)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Add() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMultiplyMatrices(t *testing.T) {
+	type args struct {
+		a *Matrix[N]
+		b *Matrix[N]
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Matrix[N]
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := MultiplyMatrices(tt.args.a, tt.args.b)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MultiplyMatrices() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MultiplyMatrices() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 */

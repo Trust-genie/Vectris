@@ -2,10 +2,10 @@ package matrix
 
 import "fmt"
 
-func (mat *Matrix[N]) Rotate() [][]N {
+func (m *Matrix[N]) Rotate() [][]N {
 	//find mat dimensions
-	row := len(*mat)
-	column := len(mat.GetColumn(0))
+	row := len(*m)
+	column := len(m.GetColumn(0))
 	//make duplicate
 	v := make([][]N, row)
 	for i := range v {
@@ -13,7 +13,7 @@ func (mat *Matrix[N]) Rotate() [][]N {
 	}
 
 	//begin copying
-	for n, i := range *mat {
+	for n, i := range *m {
 		for m, value := range i {
 			//here we are
 			v[m][row-n-1] = value

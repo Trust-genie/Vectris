@@ -2,6 +2,8 @@ package matrix
 
 import (
 	"fmt"
+	"math"
+	"math/rand"
 )
 
 //Type methods
@@ -19,17 +21,14 @@ func (m *Matrix[N]) InsertElement(Row, Column int, value N) error {
 	return nil
 }
 
-
-func (mat *Matrix[N]) DeleteElement(Row, Column int) error {
-	err := mat.InsertElement(Row, Column, 0)
+func (m *Matrix[N]) DeleteElement(Row, Column int) error {
+	err := m.InsertElement(Row, Column, 0)
 	if err != nil {
 		return err
 	}
 	return nil
 
 }
-
-/*
 
 // insert 2 for a random unit matrix
 func (mat *Matrix[N]) Random(maxvalue int) {
@@ -74,18 +73,17 @@ func (mat *Matrix[N]) Random(maxvalue int) {
 	}
 }
 
-*/
 //Given go type enforcement, i cant write code that would handle all data types i want to conver so
 //im stuck with duplicating code
 
 // Creates a Natural number martrix. Positive values only
-func MatrixUnsigned(Row, Column uint) (*[][]uint, error) {
+func MatrixUnsigned(Row, Column uint) (*Matrix[uint], error) {
 	//early exist if the matrix dimensions are invalid
 	if Row == 0 || Column == 0 {
 		return nil, fmt.Errorf("cannot create a matrix with zero rows or columns")
 	}
 
-	var mat = make([][]uint, Column)
+	var mat = make(Matrix[uint], Column)
 	for i := range mat {
 		mat[i] = make([]uint, Row)
 	}
@@ -93,27 +91,27 @@ func MatrixUnsigned(Row, Column uint) (*[][]uint, error) {
 }
 
 // Creates a int Point matrix
-func MatrixInt(Row, Column uint) ([][]int, error) {
+func MatrixInt(Row, Column uint) (*Matrix[int], error) {
 	//early exist if the matrix dimensions are invalid
 	if Row == 0 || Column == 0 {
 		return nil, fmt.Errorf("cannot create a matrix with zero rows or columns")
 	}
 
-	var mat = make([][]int, Column)
+	var mat = make(Matrix[int], Column)
 	for i := range mat {
 		mat[i] = make([]int, Row)
 	}
-	return mat, nil
+	return &mat, nil
 }
 
 // Creates a floating Point matrix
-func Matrixfloat(Row, Column uint) (*[][]float64, error) {
+func Matrixfloat(Row, Column uint) (*Matrix[float64], error) {
 	//early exist if the matrix dimensions are invalid
 	if Row == 0 || Column == 0 {
 		return nil, fmt.Errorf("cannot create a matrix with zero rows or columns")
 	}
 
-	var mat = make([][]float64, Column)
+	var mat = make(Matrix[float64], Column)
 	for i := range mat {
 		mat[i] = make([]float64, Row)
 	}
@@ -121,13 +119,13 @@ func Matrixfloat(Row, Column uint) (*[][]float64, error) {
 }
 
 // creates a complex number matrix
-func MatrixComplex(Row, Column uint) (*[][]complex128, error) {
+func MatrixComplex(Row, Column uint) (*Matrix[complex128], error) {
 	//early exist if the matrix dimensions are invalid
 	if Row == 0 || Column == 0 {
 		return nil, fmt.Errorf("cannot create a matrix with zero rows or columns")
 	}
 
-	var mat = make([][]complex128, Column)
+	var mat = make(Matrix[complex128], Column)
 	for i := range mat {
 		mat[i] = make([]complex128, Row)
 	}
@@ -136,6 +134,9 @@ func MatrixComplex(Row, Column uint) (*[][]complex128, error) {
 }
 
 func (m *Matrix[N]) Print() {
+	if m.getBounds().column > 20 || m.getBounds().row > 20 {
+		fmt.Println("Matrix dimensions greater than 20 units. \n Please consider writing to file or getting slice instead")
+	}
 	for _, i := range *m {
 		fmt.Println(i)
 	}

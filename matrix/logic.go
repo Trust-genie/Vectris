@@ -2,6 +2,7 @@ package matrix
 
 import (
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -65,11 +66,11 @@ func Equal[N Numeric](a, b *Matrix[N]) bool {
 }
 
 // This only works for matrices of the same type
-func Add[N Numeric](a, b *Matrix[N]) *Matrix[N] {
+func Add[N Numeric](a, b *Matrix[N]) (*Matrix[N], error) {
 	//check bounds
 	if a.getBounds().row != b.getBounds().row || a.getBounds().column != b.getBounds().column {
 		//quick exit if the dimensions of the two matrices dont match
-		return nil
+		return nil, fmt.Errorf("bound mismatch: \n \t Bounds for matrices do not match. Try Resize()")
 	}
 
 	// make an empty copy of a the matrix
@@ -81,18 +82,139 @@ func Add[N Numeric](a, b *Matrix[N]) *Matrix[N] {
 	//again this is a really really good place to do things concurrently
 	//create a go routine for every row and perform the additions as necessary
 	var wg sync.WaitGroup
-
 	for k := 0; k < len(*a); k++ {
 		wg.Add(1)
 		go func(k int) {
 			defer wg.Done()
 			for i := 0; i < len(*a); i++ {
-				new[k][i] = (*a)[k][i] + (*b)[k][i]
+				new[k][i] = (*a)[k][i] + (*b)[k][i] // now this is fine but what is there are a million rows
 			}
 
 		}(k)
 	}
 
 	wg.Wait()
-	return &new
+	return &new, nil
 }
+
+// sub is easily a duplication of Function add with special caveat for uint Matrices
+
+func (m *Matrix[N]) MultiplyScalar(args N) *Matrix[N] {
+	//use full for scalar
+	//no need for bound checks
+	//no need for type checks as well? go enforces type checking?
+
+	//i could hard code values for 0 and 1. zero returns a null matrix and i just return m
+
+	//doing things concurrently
+	var wg sync.WaitGroup
+
+	for i := 0; i < len(*m); i++ {
+		wg.Add(1)
+		go func(k int) {
+			defer wg.Done()
+			for j := 0; j < len((*m)[0]); j++ {
+				(*m)[k][j] = args * (*m)[k][j] // again what if there are a million rows
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	return m
+}
+
+/*
+
+//multiply vector?
+
+// Now the daddy that daddyed their daddy
+func MultiplyMatrices[N Numeric](a, b *Matrix[N]) (*Matrix[N], error) {
+	//check the bounds
+
+	//1. get bounds
+	DimA := a.getBounds()
+	DimB := b.getBounds()
+	//perform check on conformability
+	if DimB.row != DimA.column {
+		if DimB.column == DimA.row {
+			return nil, fmt.Errorf("bound mismatch: \n \t matrices boundries forbid multiplication. Try switching arguments in function call")
+		}
+
+		return nil, fmt.Errorf("bound mismatch: \n \t matrices boundries forbid multiplication. Try Resize() ")
+	}
+
+	//2. verify type match
+	//again go helps us enforce types between matrices so i dont have to worry about that
+
+	//3. create new matrix
+	new := make([][]N, DimA.row)
+	for i := range new {
+		new[i] = make([]N, DimB.column)
+	}
+
+	//4. begin multiplication
+	var wg sync.WaitGroup
+	for k := 0; k < len(*a); k++ {
+		wg.Add(1)
+		go func(k int) {
+			defer wg.Done()
+
+		}(k)
+	}
+
+	wg.Wait()
+	return &new, nil
+}
+
+/*
+func (m *Matrix[N]) ConvertToFloat() *[][]float64 {
+	var wg sync.WaitGroup
+	//get bounds
+	Dim := m.getBounds()
+	//create identical matrix
+	new := make([][]float64, Dim.row)
+	for i := range new {
+		new[i] = make([]float64, Dim.column)
+	}
+
+	//copy values in old to new
+	for i := 0; i < len(*m); i++ {
+		wg.Add(1)
+		go func(k int) {
+			for j := 0; j < len((*m)[0]); j++ {
+				new[k][j] = float64((*m)[k][j])
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	return &new
+
+}
+/*
+
+func (m *Matrix[N]) ConvertToComplex() *[][]complex128 {
+	var wg sync.WaitGroup
+	//get bounds
+	Dim := m.getBounds()
+	//create identical matrix
+	new := make([][]complex128, Dim.row)
+	for i := range new {
+		new[i] = make([]complex128, Dim.column)
+	}
+
+	//copy values in old to new
+	for i := 0; i < len(*m); i++ {
+		wg.Add(1)
+		go func(k int) {
+			for j := 0; j < len((*m)[0]); j++ {
+				new[k][j] = complex128((*m)[k][j])
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	return &new
+
+}
+*/
