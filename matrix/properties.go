@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
+	"time"
 )
 
 //Type methods
@@ -31,46 +33,56 @@ func (m *Matrix[N]) DeleteElement(Row, Column int) error {
 }
 
 // insert 2 for a random unit matrix
-func (mat *Matrix[N]) Random(maxvalue int) {
+func (m *Matrix[N]) Random(maxvalue int) error {
+	var wg sync.WaitGroup
+	errch := make(chan error)
 	var count int = 0
 
-	for n, i := range *mat {
-		count++
+	for n, i := range *m {
 		for j := range i {
-			seed := rand.Intn(maxvalue)
-			// seed negative number
-			if math.Floor(float64(count)/4) == 0 { //
-				seed = seed * -1
-			}
-			//now since our matrix could be any type
-			//just inserting seed will not work so we need a type switch
+			count++
+			wg.Add(1)
+			go func(n, j int) {
+				defer wg.Done()
+				defer close(errch)
 
-			var v N
-			switch any(v).(type) {
-			case uint:
-				if seed >= 0 {
-					seed = -1 * seed
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+				seed := r.Intn(maxvalue)
+				// seed negative number
+				if math.Floor(float64(count)/4) == 0 { //
+					seed = seed * -1
 				}
-				v = N(uint(seed))
-			case int:
-				v = N(int(seed))
-			case int16:
-				v = N(int16(seed))
-			case int64:
-				v = N(int64(seed))
-			case float64:
-				v = N(float64(seed))
-			case complex128:
-				v = N(complex(float64(seed), 0))
-			default:
-				//this is impossible. Matrix type is clearly defined
-				fmt.Errorf("Unsupported N")
+				//now since our matrix could be any type
+				//just inserting seed will not work so we need a type switch
 
-			}
+				var v N
+				switch (interface{})(v).(type) {
+				case uint:
+					v = interface{}(uint(math.Abs(float64(seed)))).(N)
+				case int:
+					v = interface{}(seed).(N)
+				case int16:
+					v = interface{}(int16(seed)).(N)
+				case int64:
+					v = interface{}(int64(seed)).(N)
+				case float64:
+					v = interface{}(float64(seed)).(N)
+				case complex128:
+					v = interface{}(complex(float64(seed), float64(r.Intn(maxvalue)))).(N)
+				default:
+					//this is impossible. Matrix type is clearly defined
+					errch <- fmt.Errorf("Unsupported N")
 
-			mat.InsertElement(n, j, v)
+				}
+
+				(*m)[n][j] = v
+			}(n, j)
 		}
+
 	}
+	wg.Wait()
+	return nil
 }
 
 //Given go type enforcement, i cant write code that would handle all data types i want to conver so

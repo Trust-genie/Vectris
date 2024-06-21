@@ -1,10 +1,10 @@
 package matrix_test
 
 import (
+	"GoMatrix/matrix"
 	"log"
 	"reflect"
 	"testing"
-	"vectris/matrix"
 )
 
 func TestMatrixUnsigned(t *testing.T) {
@@ -65,7 +65,7 @@ func BenchmarkMatrixUnsigned(b *testing.B) {
 		{"Large Dimensions", 2000, 2000, false},
 		{"XXL Dimensions", 15000, 15000, false},
 	}
-	
+
 	for _, tt := range test {
 		b.Run(tt.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
@@ -108,6 +108,33 @@ func TestMatrixInt(t *testing.T) {
 			}
 		})
 	}
+}
+func BenchmarkMatrixInt(b *testing.B) {
+	type args struct {
+		Row    uint
+		Column uint
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"Bench vs python", args{10000, 10000}, false},
+	}
+
+	for _, tt := range tests {
+		b.Run(tt.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_, err := matrix.MatrixInt(tt.args.Row, tt.args.Column)
+
+				if err != nil {
+					b.Errorf("Error occured")
+				}
+			}
+		})
+	}
+
 }
 
 func TestMatrixfloat(t *testing.T) {

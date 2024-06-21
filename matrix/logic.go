@@ -3,13 +3,14 @@ package matrix
 import (
 	"context"
 	"fmt"
+	"math/cmplx"
 	"sync"
 )
 
 // Checks if two matrices are equal
 //
 // can perform a quick check where it compares the dimensions and element values
-// can also try to perform a deep check where i use reflection to ensure that element types
+// Much Much faster that reflect.DeepEqual for large matrices
 // are equal e.g(int and uint or uint and uint64)
 func Equal[N Numeric](a, b *Matrix[N]) bool {
 
@@ -42,7 +43,7 @@ func Equal[N Numeric](a, b *Matrix[N]) bool {
 		go func(k int) {
 			defer wg.Done()
 
-			for j := 0; j <= a.getBounds().row; j++ {
+			for j := 0; j < a.getBounds().row; j++ {
 				select {
 				case <-ctx.Done():
 					return
@@ -158,6 +159,7 @@ func MultiplyMatrices[N Numeric](a, b *Matrix[N]) (*Matrix[N], error) {
 		wg.Add(1)
 		go func(k int) {
 			defer wg.Done()
+			//magic
 
 		}(k)
 	}
@@ -166,7 +168,8 @@ func MultiplyMatrices[N Numeric](a, b *Matrix[N]) (*Matrix[N], error) {
 	return &new, nil
 }
 
-/*
+*/
+
 func (m *Matrix[N]) ConvertToFloat() *[][]float64 {
 	var wg sync.WaitGroup
 	//get bounds
@@ -191,7 +194,6 @@ func (m *Matrix[N]) ConvertToFloat() *[][]float64 {
 	return &new
 
 }
-/*
 
 func (m *Matrix[N]) ConvertToComplex() *[][]complex128 {
 	var wg sync.WaitGroup
@@ -208,7 +210,10 @@ func (m *Matrix[N]) ConvertToComplex() *[][]complex128 {
 		wg.Add(1)
 		go func(k int) {
 			for j := 0; j < len((*m)[0]); j++ {
-				new[k][j] = complex128((*m)[k][j])
+				switch v := (*m)[k][j].(type) {
+				case float64:
+					new[k][j] = complex(v, 0)
+				}
 			}
 		}(i)
 	}
@@ -217,4 +222,61 @@ func (m *Matrix[N]) ConvertToComplex() *[][]complex128 {
 	return &new
 
 }
-*/
+
+func (m *Matrix[N]) Resize(New_Row, New_column uint) (*Matrix[N], error) {
+	//1. check bounds
+	if uint(m.getBounds().row) < New_Row || uint(m.getBounds().column) < New_column {
+		//quick exit if the dimensions provided would shrink the matrix
+		return nil, fmt.Errorf("Resize error: \n \t Cannot Shrink matrix, check values for new row and column provided")
+	}
+
+	new := make(Matrix[N], New_Row)
+	for i := 0; i < len(new); i++ {
+		new[i] = make([]N, New_column)
+	}
+
+	//add old values into new matrix
+	var wg sync.WaitGroup
+	for k := 0; k < len(*m); k++ {
+		wg.Add(1)
+		go func(k int) {
+			defer wg.Done()
+			for i := 0; i < len(*m); i++ {
+				new[k][i] = (*m)[k][i] // now this is fine but what is there are a million rows
+			}
+
+		}(k)
+	}
+
+	wg.Wait()
+	return &new, nil
+
+}
+
+func (m *Matrix[complex128]) Conjugate() {
+	//do some magic
+	var wg sync.WaitGroup
+	for i := 0; i < len(*m); i++ {
+		wg.Add(1)
+		go func(k int) {
+			defer wg.Done()
+			for j := 0; j < len((*m)[0]); j++ {
+				(*m)[k][j] = interface{}(cmplx.Conj((*m)[k][j])).(complex128)
+			}
+		}(i)
+
+	}
+	wg.Wait()
+}
+
+func (m *Matrix[N]) Transpose() error {
+	// we would the fliping the matrix on its axis
+
+	return nil
+}
+
+func (m *Matrix[N]) Determinant() N {
+	//this one is a bit tricky because it is really compulationally expensive
+
+	return 0
+}
