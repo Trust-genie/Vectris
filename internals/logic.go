@@ -210,7 +210,7 @@ func (m *Matrix[N]) ConvertToComplex() *[][]complex128 {
 		wg.Add(1)
 		go func(k int) {
 			for j := 0; j < len((*m)[0]); j++ {
-				switch v := (*m)[k][j].(type) {
+				switch v := (interface{})((*m)[k][j]).(type) {
 				case float64:
 					new[k][j] = complex(v, 0)
 				}

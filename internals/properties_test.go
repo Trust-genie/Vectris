@@ -1,7 +1,7 @@
 package matrix_test
 
 import (
-	"GoMatrix/matrix"
+	"GoMatrix/internals"
 	"log"
 	"reflect"
 	"testing"
