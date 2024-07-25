@@ -3,7 +3,6 @@ package matrix
 import (
 	"context"
 	"fmt"
-	"math/cmplx"
 	"sync"
 )
 
@@ -184,8 +183,23 @@ func (m *Matrix[N]) ConvertToFloat() *[][]float64 {
 	for i := 0; i < len(*m); i++ {
 		wg.Add(1)
 		go func(k int) {
+			defer wg.Done()
 			for j := 0; j < len((*m)[0]); j++ {
-				new[k][j] = float64((*m)[k][j])
+				switch v := (interface{})((*m)[k][j]).(type) {
+				case int:
+					new[k][j] = float64(v)
+				case int16:
+					new[k][j] = float64(v)
+				case int64:
+					new[k][j] = float64(v)
+				case uint:
+					new[k][j] = float64(v)
+				case float64:
+					new[k][j] = v
+				case complex128:
+					//need to return an error in this case.
+					new[k][j] = real(v)
+				}
 			}
 		}(i)
 	}
@@ -209,6 +223,7 @@ func (m *Matrix[N]) ConvertToComplex() *[][]complex128 {
 	for i := 0; i < len(*m); i++ {
 		wg.Add(1)
 		go func(k int) {
+			defer wg.Done()
 			for j := 0; j < len((*m)[0]); j++ {
 				switch v := (interface{})((*m)[k][j]).(type) {
 				case float64:
@@ -253,20 +268,33 @@ func (m *Matrix[N]) Resize(New_Row, New_column uint) (*Matrix[N], error) {
 
 }
 
-func (m *Matrix[complex128]) Conjugate() {
+// returns the matrixs conjugate
+func (m *Matrix[complex128]) Conjugate() *[][]complex128 {
 	//do some magic
+	Dim := m.getBounds()
+
+	new := make([][]complex128, Dim.row)
+
+	for i := range new {
+		new[i] = make([]complex128, Dim.column)
+	}
 	var wg sync.WaitGroup
 	for i := 0; i < len(*m); i++ {
 		wg.Add(1)
 		go func(k int) {
 			defer wg.Done()
 			for j := 0; j < len((*m)[0]); j++ {
-				(*m)[k][j] = interface{}(cmplx.Conj((*m)[k][j])).(complex128)
+				switch v := interface{}((*m)[k][j]).(type) {
+				case complex128:
+					new[k][j] = v
+				}
 			}
 		}(i)
 
 	}
 	wg.Wait()
+
+	return &new
 }
 
 func (m *Matrix[N]) Transpose() error {

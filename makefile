@@ -1,7 +1,7 @@
 build:
 	@go build -o bin/GoMatrix  ./cmd
 
-run: build
+run:	build
 	@./bin/GoMatrix
 
 test:
