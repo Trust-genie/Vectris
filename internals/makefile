@@ -1,8 +1,8 @@
 build:
-	@go build -o ./bin/vectris  ./cmd
+	@go build -o bin/GoMatrix  ./cmd
 
 run: build
-	@./bin/vectris
+	@./bin/GoMatrix
 
 test:
 	@go test ./... -v
